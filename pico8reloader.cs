@@ -14,7 +14,7 @@ using System.Windows.Forms;
 [assembly : AssemblyTitle("pico8reloader")]
 [assembly : AssemblyConfiguration("")]
 [assembly : AssemblyCompany("rostok - https://github.com/rostok/")]
-[assembly : AssemblyCopyright("Copyright © 2020")]
+[assembly : AssemblyCopyright("Copyright ï¿½ 2020")]
 [assembly : AssemblyTrademark("")]
 [assembly : AssemblyCulture("")]
 [assembly : AssemblyVersion("1.0.1.0")]
@@ -76,6 +76,7 @@ public class Pico8Reloader {
 
     public static Rect windowRect = new Rect();
     public static bool windowRectSet = false;
+    public static string main_p8 = "";
 
     [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
     public static void Run() {
@@ -93,11 +94,25 @@ public class Pico8Reloader {
             Console.WriteLine("pico8 should be accessible via PATH variable");
             Console.WriteLine("");
             Console.WriteLine("this comes with MIT license from rostok - https://github.com/rostok/");
+            Console.WriteLine("Update from Frozax: if we specifiy a p8, we use the folder of this p8, but we reload this p8 only even if other changes (useful when using includes)");
             return;
         }
 
         string dir = ".";
-        if (args.Length >= 2 && Directory.Exists(args[1])) dir = args[1];
+        if (args.Length >= 2)
+        {
+            if (!Directory.Exists(args[1]))
+            {
+                // check if it's a p8
+                if (File.Exists(args[1]))
+                {
+                    main_p8 = args[1];
+                    dir = Path.GetDirectoryName(args[1]);
+                }
+            }
+            if(Directory.Exists(args[1]))
+                dir = args[1];
+        }
 
         if (args[args.Length-1].StartsWith("--winpos=")) {
             string s = args[args.Length-1].Replace("--winpos=","");
@@ -147,17 +162,18 @@ public class Pico8Reloader {
         IntPtr focusedWindow = GetForegroundWindow();
         Process p = Process.GetProcessesByName("pico8").FirstOrDefault();
 
+        string full_file_to_find = main_p8.Length == 0 ? FullPath : main_p8;
         if (p != null) {
             string args = GetCommandLine(p);
-            string fn = Path.GetFileName(FullPath);
+            string fn = Path.GetFileName(full_file_to_find);
 
             if (!fn.Contains(".p8")) {
                 Console.WriteLine("	not a p8 file: " + fn);
                 return;
             }
 
-            //Console.WriteLine("args:"+args);
-            //Console.WriteLine("fn:"+fn);
+            Console.WriteLine("args:"+args);
+            Console.WriteLine("fn:"+fn);
             if (args.ToLower().Contains(fn.ToLower())) {
                 // just reload
                 Console.WriteLine("	sending Ctrl+R");
@@ -186,8 +202,8 @@ public class Pico8Reloader {
             }
         }
 
-        Console.WriteLine("	running: pico8 -run " + FullPath);
-        p = Process.Start("pico8", " -run " + FullPath);
+        Console.WriteLine("	running: pico8 -run " + full_file_to_find);
+        p = Process.Start("pico8", " -run " + full_file_to_find);
         Thread.Sleep(1000);
 		SetForegroundWindow(p.MainWindowHandle);
 
