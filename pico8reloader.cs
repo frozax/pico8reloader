@@ -172,8 +172,8 @@ public class Pico8Reloader {
                 return;
             }
 
-            Console.WriteLine("args:"+args);
-            Console.WriteLine("fn:"+fn);
+            //Console.WriteLine("args:"+args);
+            //Console.WriteLine("fn:"+fn);
             if (args.ToLower().Contains(fn.ToLower())) {
                 // just reload
                 Console.WriteLine("	sending Ctrl+R");
